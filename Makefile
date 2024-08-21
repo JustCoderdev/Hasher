@@ -57,17 +57,6 @@ run_test:
 	@chmod +x bin/$(PROGRAM_NAME)_test
 	@cd bin && ./$(PROGRAM_NAME)_test
 
-local_off: build_off run_off
-build_off:
-	@echo "Compiling... (off)"
-	@mkdir -p bin
-	$(CC) -g off/test_off.c off/sha1_off.c -o bin/test_off
-
-run_off:
-	@echo -e "Running... (off)\n"
-	@chmod +x bin/test_off
-	@cd bin && ./test_off
-
 
 .PHONY: clean
 clean:

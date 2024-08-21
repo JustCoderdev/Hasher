@@ -24,7 +24,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 		exit(failure);
 	}
 
-	file_size = ftell(file) - 1;
+	file_size = ftell(file);
 	if(file_size == -1) {
 		core_log(CORE_ERROR, "Can't get file size during block creation: %s\n",
 				strerror(errno));
@@ -209,9 +209,6 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 		for(t = 0; t <= 15; ++t) {
 			W[t] = block.words[t];
 		}
-
-		assert(W[15] == 40);
-
 
 		for(t = 16; t <= 79; ++t) {
 			W[t] = SHS_Word32_ROTL(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);

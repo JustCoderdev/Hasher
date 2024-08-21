@@ -69,7 +69,7 @@ int main(void)
 
 			assert(snprintf(buffR, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
 
-			test("Test A", SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte),
+			test("Test 1 block", SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte),
 				 buffH, buffR);
 		}
 	}
