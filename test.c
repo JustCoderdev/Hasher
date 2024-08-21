@@ -4,133 +4,191 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <stdio.h>
 int snprintf(char* str, size_t size, const char *format, ...);
 
+/* -- Test dataset -- */
 
-void test(CString message, bool pass, CString expected, CString got) {
-	if(pass)
-		printf("[*] \033[32mPASS\033[0m: %s\n",
-				message);
-	else
-		printf("[x] \033[31mFAIL\033[0m: %s\n  expected: %s\n       got: %s\n",
-				message, expected, got);
+#define TEST_FILES_COUNT 3
+char* const test_files[TEST_FILES_COUNT] = {
+	"test/test_abcde", "test/test_lorem", "test/test_poem" };
+Word32 test_exp_results[TEST_FILES_COUNT][5] = {
+	{ 0xec113123, 0x86ad5616, 0x74f724b8, 0xcca7cf17, 0x96e26d1d },
+	{ 0x0d7d0c40, 0x6f4b1152, 0x70cac19c, 0x2c67522a, 0x4a9d9478 },
+	{ 0xd0b6dd32, 0x03ca6d7c, 0x0e442171, 0x3c34fe31, 0x8aa67ffa }
+};
+
+/* ------------------ */
+
+
+void test(bool pass, CString expected, CString got, CString format, ...) {
+	va_list args;
+	va_start(args, format);
+
+	if(pass) {
+		printf("[*] \033[32mPASS\033[0m: ");
+		vfprintf(stdout, format, args);
+		printf("\n");
+	} else {
+		printf("[x] \033[31mFAIL\033[0m: ");
+		vfprintf(stdout, format, args);
+		printf("\n  expected: %s\n       got: %s\n",
+		expected, got);
+	}
+
+	va_end(args);
 }
 
-
-int main(void)
+void test_word_operations()
 {
-	Block512_List blocks = {0};
-
-	printf("==== SHS Validation Tests ====\n");
-
 	printf("\n Word32 Operations:\n");
-	test("W32 Left Rotation (SHS_Word32_ROTL)",
-	     SHS_Word32_ROTL(10, 5) == SHS_Word32_ROTR(10, 32 - 5),
-	     "true", "false"
+
+	test(SHS_Word32_ROTL(10, 5) == SHS_Word32_ROTR(10, 32 - 5),
+	     "true", "false", "W32 Left/Right Rotation (SHS_Word32_ROTL, SHS_Word32_ROTR)"
 	);
 
+	/* test(SHS_Word64_ROTL(10, 5) == SHS_Word64_ROTR(10, 32 - 5), */
+	/*      "true", "false", "W64 Left/Right Rotation (SHS_Word64_ROTL, SHS_Word64_ROTR)" */
+	/* ); */
+}
+
+void print_block512_list(Block512_List blocks)
+{
+	n64 i, j, k;
+	for(i = 0; i < blocks.count; ++i)
 	{
-	/* Block creation */
-		FILE* tfile = fopen("aaaa", "r");
-		assert(tfile);
+		Block512 block = blocks.items[i];
 
-		printf("\n Block creations:\n");
-		blocks = SHS_block512_create_list_from_file(tfile);
-		fclose(tfile);
-	}
-
-	{
-	/* Digest generation */
-		#define BUFF_LEN 43
-		char buffH[BUFF_LEN] = {0};
-		char buffR[BUFF_LEN] = {0};
-		digest160 hardig = {0};
-
-		printf("\n Digest operations:\n");
-
-		{
-			Word32 result[5] = { 0xda881919, 0x84932a60, 0xa59109ea, 0x2c276a19, 0x1380fb41 };
-			char* result_text = "0xda88191984932a60a59109ea2c276a191380fb41";
-
-			SHS_digest_from_Word32(SHS_DS160, hardig.byte, 5, result);
-			assert(snprintf(buffH, BUFF_LEN, D160_FMT, D160(hardig)) < BUFF_LEN);
-
-			test("Word32 array to digest (SHS_digest_from_Word32)",
-				 !strncmp(result_text, buffH, BUFF_LEN), result_text, buffH);
-		}
-
-
-		printf("\n SHA-1:\n");
-
-		{
-			digest160 digest = SHS_SHA1_generate_digest(blocks);
-
-			assert(snprintf(buffR, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
-
-			test("Test 1 block", SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte),
-				 buffH, buffR);
-		}
-	}
-
-#if 0
-	{
-	/* List blocks as bytes */
-		n64 i, j;
-		for(i = 0; i < blocks.count; ++i)
-		{
-			Block512 block = blocks.items[i];
-
-			printf("\n%02lu|", i + 1);
-			for(j = 0; j < 8; ++j)
-			{
-				printf(" %c %c %c %c_ %c %c %c %c|",
-					block.words[j * 2] >> 24, block.words[j * 2] >> 16,
-					block.words[j * 2] >> 8, block.words[j * 2] >> 0,
-					block.words[j * 2 + 1] >> 24, block.words[j * 2 + 1] >> 16,
-					block.words[j * 2 + 1] >> 8, block.words[j * 2 + 1] >> 0
-				);
-			}
-			printf("\n");
-
-			printf("%02lu|", i + 1);
-			for(j = 0; j < 8; ++j)
-			{
-				printf("%08x_%08x|", block.words[j * 2], block.words[j * 2 + 1]);
-			}
-			printf("\n");
-		}
-	}
-#endif
-#if 1
-	{
-	/* List last block as bytes */
-		Block512 block = blocks.items[blocks.count - 1];
-		n64 j;
-
-		printf("\n\033[34m%02lu|", blocks.count);
+		printf("\n%02lu|", i + 1);
 		for(j = 0; j < 8; ++j)
 		{
-			printf(" %c %c %c %c_ %c %c %c %c|",
-				block.words[j * 2] >> 24, block.words[j * 2] >> 16,
-				block.words[j * 2] >> 8, block.words[j * 2] >> 0,
-				block.words[j * 2 + 1] >> 24, block.words[j * 2 + 1] >> 16,
-				block.words[j * 2 + 1] >> 8, block.words[j * 2 + 1] >> 0
-			);
-		}
-		printf("\n");
+			for(k = 0; k < 8; ++k)
+			{
+				char c = block.words[j * 2 + (k > 3)] >> (24 - 8 * k);
+				if(c > 32 && c < 127) printf(" %c", c);
+				else if(c == '\t') printf("\033[33m\\t\033[0m");
+				else if(c == '\r') printf("\033[33m\\r\033[0m");
+				else if(c == '\n') printf("\033[33m\\n\033[0m");
+				else if(c ==  ' ') printf("\033[33m..\033[0m");
+				else printf("\033[31m??\033[0m");
 
-		printf("%02lu|", blocks.count);
+				if(k ==  3) putchar('_');
+			}
+			printf("|");
+		}
+
+		printf("\n%02lu|", i + 1);
 		for(j = 0; j < 8; ++j)
 		{
 			printf("%08x_%08x|", block.words[j * 2], block.words[j * 2 + 1]);
 		}
-		printf("\033[0m\n");
+		printf("\n");
 	}
-#endif
+}
 
-	SHS_block512_List_free(&blocks);
+void test_block_creation()
+{
+	Block512_List blocks = {0};
+	n64 i;
+
+	printf("\n Block creation:\n");
+
+	for(i = 0; i < TEST_FILES_COUNT; ++i) {
+		char* filename = test_files[i];
+
+		FILE* file = fopen(filename, "r");
+		if(file == NULL) {
+			core_log(CORE_ERROR, "Can't open file '%s': %s",
+					filename, strerror(errno));
+			exit(failure);
+		}
+
+		blocks = SHS_block512_create_list_from_file(file);
+		fclose(file);
+
+		/* print_block512_list(blocks); */
+		test(true, "", "",
+			"Creating block512 list for file '%s'", filename
+		);
+
+		/* Check for 0B long files */
+		/* Check for 23B files */
+		/* Check for 64B files */
+		/* Check for 75B files */
+
+		SHS_block512_List_free(&blocks);
+	}
+}
+
+void test_digest_operations()
+{
+	#define BUFF_LEN 43
+	char buff[BUFF_LEN] = {0};
+
+	Word32 words[5] = { 0xda881919, 0x84932a60, 0xa59109ea, 0x2c276a19, 0x1380fb41 };
+	char* exp_text = "0xda88191984932a60a59109ea2c276a191380fb41";
+
+	digest160 digest = {0};
+
+	printf("\n Digest operations:\n");
+
+	SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, words);
+
+	assert(snprintf(buff, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
+	test(!strncmp(exp_text, buff, BUFF_LEN), exp_text, buff,
+		"Word32 array to digest (SHS_digest_from_Word32)"
+	);
+
+
+	/* TODO: add digest compare tests */
+	/* test(SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte, "SHA1 on file ''"), */
+}
+
+void test_sha1()
+{
+	#define BUFF_LEN 43
+	char buffEXP[BUFF_LEN] = {0},
+		 buffDIG[BUFF_LEN] = {0};
+
+	Block512_List blocks = {0};
+	digest160 digest;
+	n64 i;
+
+	printf("\n SHA-1:\n");
+
+	for(i = 0; i < TEST_FILES_COUNT; ++i) {
+		char* filename = test_files[i];
+		Word32* exp_result = test_exp_results[i];
+
+		FILE* file = fopen(filename, "r");
+		blocks = SHS_block512_create_list_from_file(file);
+		fclose(file);
+
+		digest = SHS_SHA1_generate_digest(blocks);
+
+		assert(snprintf(buffDIG, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
+		SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, exp_result);
+		assert(snprintf(buffEXP, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
+
+		test(!strncmp(buffDIG, buffEXP, BUFF_LEN), buffEXP, buffDIG,
+			"SHA1 on file '%s'", filename
+		);
+	}
+}
+
+int main(void)
+{
+
+	printf("==== SHS Validation Tests ====\n");
+
+	test_word_operations();
+	test_block_creation();
+
+	test_digest_operations();
+
+	test_sha1();
 
 	/* from different seeds,
 	 * generate blobs of random data, size

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 
 /* Create and free Blocks
@@ -62,6 +63,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 					blocks.count, strerror(errno));
 			exit(failure);
 		}
+		memset(blocks.items, 0, blocks.count * BLOCK_SIZE);
 
 		for(i = 0; i < blocks.count; ++i)
 		{
@@ -107,7 +109,6 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 					| ((t & 0xFF000000) >> 24);
 			}
 		}
-
 
 		{
 			Block512* last_block = &blocks.items[blocks.count - 1];

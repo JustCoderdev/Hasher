@@ -22,6 +22,12 @@ void core_log(CString level, CString color, CString file, int line,
 	fprintf(LOG_STREAM, CSI "%s" M "%s" CSI RESET M ":%s:%d: ",
 			color, level, file, line);
 #else
+	(void)color, (void)file, (void)line;
+	if(!strncmp(level, "DEBUG", strlen("DEBUG"))) {
+		va_end(args);
+		return;
+	}
+
 	fprintf(LOG_STREAM, "[%s] ", level);
 #endif
 

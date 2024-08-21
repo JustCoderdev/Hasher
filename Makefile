@@ -24,7 +24,8 @@ LDFLAGS = -L./
 
 #-DDEBUG_MEMDEB_ENABLE=1
 #-DDEBUG_STRING_ENABLE=1
-DFLAGS = -DDEBUG_ENABLE=1
+# -DDEBUG_ENABLE=1
+DFLAGS =
 FLAGS = $(CCFLAGS) $(IFLAGS) $(LDFLAGS) $(RAYFLAGS) $(DFLAGS)
 
 local: build run
@@ -37,19 +38,13 @@ local: build run
 build:
 	@echo "Compiling... "
 	@mkdir -p bin
-	@cp aaaa bin/aaaa
 	$(CC) $(FLAGS) $(SRC_FILES) $(CORE_FILES) $(SHS_FILES) -o bin/${PROGRAM_NAME}
-
-run:
-	@echo -e "Running...\n"
-	@chmod +x bin/$(PROGRAM_NAME)
-	@cd bin && ./$(PROGRAM_NAME) aaaa
 
 local_test: build_test run_test
 build_test:
 	@echo "Compiling... (test)"
 	@mkdir -p bin
-	@cp aaaa bin/aaaa
+	@cp -r test bin/test
 	$(CC) $(FLAGS) test.c $(SHS_FILES) $(CORE_FILES) -o bin/${PROGRAM_NAME}_test
 
 run_test:
