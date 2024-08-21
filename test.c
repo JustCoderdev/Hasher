@@ -64,8 +64,8 @@ int main(int argc, char** argv)
 		printf("\n Digest operations:\n");
 
 		{
-			Word32 result[5] = { 0x4cfe4d18, 0x6a363dac, 0xd896f462, 0x973eb533, 0x6864e3e4 };
-			char* result_text = "0x4cfe4d186a363dacd896f462973eb5336864e3e4";
+			Word32 result[5] = { 0xda881919, 0x84932a60, 0xa59109ea, 0x2c276a19, 0x1380fb41 };
+			char* result_text = "0xda88191984932a60a59109ea2c276a191380fb41";
 
 			SHS_digest_from_Word32(SHS_DS160, hardig.byte, 5, result);
 			assert(snprintf(buffH, BUFF_LEN, D160_FMT, D160(hardig)) < BUFF_LEN);
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-#if 1
+#if 0
 	{
 	/* List blocks as bytes */
 		n64 i, j;
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 					block.words[j * 2] >> 8, block.words[j * 2] >> 0,
 					block.words[j * 2 + 1] >> 24, block.words[j * 2 + 1] >> 16,
 					block.words[j * 2 + 1] >> 8, block.words[j * 2 + 1] >> 0
-					);
+				);
 			}
 			printf("\n");
 
@@ -114,6 +114,32 @@ int main(int argc, char** argv)
 			}
 			printf("\n");
 		}
+	}
+#endif
+#if 1
+	{
+	/* List last block as bytes */
+		Block512 block = blocks.items[blocks.count - 1];
+		n64 j;
+
+		printf("\n\033[34m%02lu|", blocks.count);
+		for(j = 0; j < 8; ++j)
+		{
+			printf(" %c %c %c %c_ %c %c %c %c|",
+				block.words[j * 2] >> 24, block.words[j * 2] >> 16,
+				block.words[j * 2] >> 8, block.words[j * 2] >> 0,
+				block.words[j * 2 + 1] >> 24, block.words[j * 2 + 1] >> 16,
+				block.words[j * 2 + 1] >> 8, block.words[j * 2 + 1] >> 0
+			);
+		}
+		printf("\n");
+
+		printf("%02lu|", blocks.count);
+		for(j = 0; j < 8; ++j)
+		{
+			printf("%08x_%08x|", block.words[j * 2], block.words[j * 2 + 1]);
+		}
+		printf("\033[0m\n");
 	}
 #endif
 

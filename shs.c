@@ -43,6 +43,9 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 		n8 extra_bytes = file_size % BLOCK_SIZE;
 		Block512_List blocks = {0};
 
+#define PBLOCK_MAX_SIZE 55 /* 55B = (512 - 64 - 8)/8 */
+		bool need_extra_block = extra_bytes > PBLOCK_MAX_SIZE;
+
 		/* #error "Debug here, check for 'added bytes'" */
 		core_log(CORE_DEBUG,
 				"Creating blocks for file of %lu bytes (%lu blocks + %lu extra bytes)\n",
@@ -53,7 +56,9 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			exit(failure);
 		}
 
-		blocks.count = file_blocks + (extra_bytes > 0 ? 1 : 0);
+
+		/* +1 is padding block,  */
+		blocks.count = file_blocks + (need_extra_block ? 1 : 0) + 1;
 		blocks.items = dmalloc(blocks.count * BLOCK_SIZE);
 		if(blocks.items == NULL) {
 			core_log(CORE_ERROR,
@@ -68,8 +73,15 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			n64 j;
 
 			ssize_t read_bytes, request_bytes = BLOCK_SIZE;
-			if(i == blocks.count - 1 && extra_bytes > 0)
+
+			if(blocks.count > 1 && i == blocks.count - 2 && need_extra_block)
 				request_bytes = extra_bytes;
+
+			if(i == blocks.count - 1 && extra_bytes > 0)
+			{
+				if(need_extra_block) break;
+				request_bytes = extra_bytes;
+			}
 
 			read_bytes = fread(block->words, 1, request_bytes, file);
 			if(read_bytes < request_bytes) {
@@ -85,6 +97,8 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 				exit(failure);
 			}
 
+			/* core_log(CORE_DEBUG, "[%02lu] Read %lu bytes\n", i + 1, read_bytes); */
+
 			/* Fix endianess */
 			for(j = 0; j < 16; ++j)
 			{
@@ -98,17 +112,28 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			}
 		}
 
-		if(extra_bytes > 0) {
-			n64 j;
+
+		{
 			Block512* last_block = &blocks.items[blocks.count - 1];
-			assert(extra_bytes < sizeof(Word32) * 16);
+			assert(!last_block->as.wF && !last_block->as.wE);
 
-			/* write B10000000 to next free byte in word */
-			last_block->words[extra_bytes / sizeof(Word32)]
-				|= 0x80 << ((sizeof(Word32) - extra_bytes - 1) * 8);
+			if(extra_bytes > PBLOCK_MAX_SIZE) {
+				Block512* last_file_block = &blocks.items[blocks.count - 2];
+				assert(extra_bytes < sizeof(Word32) * 16);
 
-			/* write size to last word */
-			last_block->as.wF |= extra_bytes;
+				/* write B10000000 to next free byte in word */
+				last_file_block->words[extra_bytes / sizeof(Word32)]
+					|= 0x80 << ((sizeof(Word32) - extra_bytes - 1) * 8);
+			}
+			else
+			{
+				last_block->words[extra_bytes / sizeof(Word32)]
+					|= 0x80 << ((sizeof(Word32) - extra_bytes - 1) * 8);
+			}
+
+			/* write size (64b) to last words (2*32b) */
+			last_block->as.wE = file_size >> 32;
+			last_block->as.wF = file_size;
 		}
 
 		return blocks;
