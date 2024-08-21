@@ -14,7 +14,8 @@ CORE_FILES = lib/core/core_bit.c \
 
 CC = gcc
 CCFLAGS = -xc -std=c89 -Wall -Wextra -Werror \
-		 -Wno-unused -g -pedantic-errors -pedantic
+		 -g -pedantic-errors -pedantic
+#-Wno-unused
 IFLAGS = -I./ -I./lib/include
 LDFLAGS = -L./
 #RAYFLAGS = -lGL -lm -lpthread -ldl -lX11 \
@@ -55,6 +56,17 @@ run_test:
 	@echo -e "Running... (test)\n"
 	@chmod +x bin/$(PROGRAM_NAME)_test
 	@cd bin && ./$(PROGRAM_NAME)_test
+
+local_off: build_off run_off
+build_off:
+	@echo "Compiling... (off)"
+	@mkdir -p bin
+	$(CC) -g off/test_off.c off/sha1_off.c -o bin/test_off
+
+run_off:
+	@echo -e "Running... (off)\n"
+	@chmod +x bin/test_off
+	@cd bin && ./test_off
 
 
 .PHONY: clean

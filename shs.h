@@ -1,8 +1,9 @@
 /* Secure Hash Standard module for JustCoderdev Core library v1
  * */
 
-/* SHA-1 SHA-224 SHA-256 SHA-384 SHA-512 SHA-512/224 SHA-512/256
- * message --> pure fn --> digest
+/*
+ * Standard followed RFC3174
+ * source: <https://www.rfc-editor.org/rfc/rfc3174>
  * */
 
 #ifndef SHS_H_
@@ -82,11 +83,9 @@ extern void SHS_block1024_List_free(Block1024_List* blocks);
 
 extern Word32 SHS_Word32_ROTL(Word32 word, n8 n);
 extern Word32 SHS_Word32_ROTR(Word32 word, n8 n);
-extern Word32 SHS_Word32_Add(Word32 wA, Word32 wB);
 
 extern Word64 SHS_Word64_ROTL(Word64 word, n8 n);
 extern Word64 SHS_Word64_ROTR(Word64 word, n8 n);
-extern Word64 SHS_Word64_Add(Word64 wA, Word64 wB);
 
 
 /* Generate digest
@@ -118,6 +117,8 @@ extern bool SHS_digest_compare(SHS_Digest_Size size, const n8* dA, const n8* dB)
 
 extern void SHS_digest_from_Word32(SHS_Digest_Size dsize, n8* digest,
 		n8 hcount, const Word32* hash);
+extern void SHS_digest_from_Word64(SHS_Digest_Size dsize, n8* digest,
+		n8 hcount, const Word64* hash);
 
 
 #endif /* SHS_H_ */

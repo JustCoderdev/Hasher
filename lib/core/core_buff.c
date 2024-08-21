@@ -21,7 +21,7 @@ i64 buffer_find_chr(char chr, char *buffer, n64 len) {
 
 /* Return the index of the first char that is not a delimiter or -1 */
 i64 buffer_skip_str(char *del, n64 del_len, char *buffer, n64 buff_len) {
-	(void)del, del_len, buffer, buff_len;
+	(void)del, (void)del_len, (void)buffer, (void)buff_len;
 	assert(0 && "NOT IMPLEMENTED buffer_skip_str");
 	return -1;
 }

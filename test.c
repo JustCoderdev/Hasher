@@ -9,19 +9,6 @@
 int snprintf(char* str, size_t size, const char *format, ...);
 
 
-
-char* shift(int* argc, char*** argv)
-{
-	char* t;
-
-	(*argc)--;
-	assert(*argc >= 0);
-	t = (*argv)[*argc];
-	(*argv)++;
-
-	return t;
-}
-
 void test(CString message, bool pass, CString expected, CString got) {
 	if(pass)
 		printf("[*] \033[32mPASS\033[0m: %s\n",
@@ -31,7 +18,8 @@ void test(CString message, bool pass, CString expected, CString got) {
 				message, expected, got);
 }
 
-int main(int argc, char** argv)
+
+int main(void)
 {
 	Block512_List blocks = {0};
 
@@ -45,7 +33,6 @@ int main(int argc, char** argv)
 
 	{
 	/* Block creation */
-		n64 i;
 		FILE* tfile = fopen("aaaa", "r");
 		assert(tfile);
 

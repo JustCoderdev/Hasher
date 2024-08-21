@@ -5,10 +5,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-
 #include <stdio.h>
-int fileno(FILE *stream);
-
 #include <assert.h>
 
 
@@ -27,7 +24,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 		exit(failure);
 	}
 
-	file_size = ftell(file);
+	file_size = ftell(file) - 1;
 	if(file_size == -1) {
 		core_log(CORE_ERROR, "Can't get file size during block creation: %s\n",
 				strerror(errno));
@@ -43,8 +40,8 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 		n8 extra_bytes = file_size % BLOCK_SIZE;
 		Block512_List blocks = {0};
 
-#define PBLOCK_MAX_SIZE 55 /* 55B = (512 - 64 - 8)/8 */
-		bool need_extra_block = extra_bytes > PBLOCK_MAX_SIZE;
+#define LAST_BLOCK_MAX_SIZE 55 /* 55B = (512 - 64 - 8)/8 */
+		bool need_extra_block = extra_bytes > LAST_BLOCK_MAX_SIZE;
 
 		/* #error "Debug here, check for 'added bytes'" */
 		core_log(CORE_DEBUG,
@@ -55,7 +52,6 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			core_log(CORE_ERROR, "File is empty during block creation\n");
 			exit(failure);
 		}
-
 
 		/* +1 is padding block,  */
 		blocks.count = file_blocks + (need_extra_block ? 1 : 0) + 1;
@@ -117,7 +113,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			Block512* last_block = &blocks.items[blocks.count - 1];
 			assert(!last_block->as.wF && !last_block->as.wE);
 
-			if(extra_bytes > PBLOCK_MAX_SIZE) {
+			if(extra_bytes > LAST_BLOCK_MAX_SIZE) {
 				Block512* last_file_block = &blocks.items[blocks.count - 2];
 				assert(extra_bytes < sizeof(Word32) * 16);
 
@@ -132,8 +128,8 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			}
 
 			/* write size (64b) to last words (2*32b) */
-			last_block->as.wE = file_size >> 32;
-			last_block->as.wF = file_size;
+			last_block->as.wE = file_size * 8 >> 32;
+			last_block->as.wF = file_size * 8;
 		}
 
 		return blocks;
@@ -168,29 +164,20 @@ Word32 SHS_Word32_ROTR(Word32 word, n8 n) {
 	return (word >> n) | (word << (32 - n));
 }
 
-Word32 SHS_Word32_Add(Word32 wA, Word32 wB) {
-	n64 z = (n64)wA + (n64)wB;
-
-	/* Overflow */
-	assert(!(z < wA || z < wB || z - wA != wB || z - wB != wA));
-	return z % (n32)-1;
-}
-
 /* extern Word64 SHS_Word64_ROTL(Word64 word); */
 /* extern Word64 SHS_Word64_ROTR(Word64 word); */
 /* extern Word64 SHS_Word64_SHR(Word64 word); */
-/* extern Word64 SHS_Word64_AMOD(Word64 word); */
 
 
 /* Generate digest
  * ----------------------------------------------------------- */
 
-static Word32 SHS_SHA1_f(n8 t, Word32 x, Word32 y, Word32 z) {
+static Word32 SHS_SHA1_f(n8 t, Word32 b, Word32 c, Word32 d) {
 	assert(t < 80);
-	if(t <= 19) return (x & y) ^ (~x & z);
-	if(t <= 39) return x ^ y ^ z;
-	if(t <= 59) return (x & y) ^ (x & z) ^ (y & z);
-	return x ^ y ^ z;
+	if(t <= 19) return (b & c) | ((~b) & d);
+	if(t <= 39) return b ^ c ^ d;
+	if(t <= 59) return (b & c) | (b & d) | (c & d);
+	return b ^ c ^ d;
 }
 
 static Word32 SHS_SHA1_K(n8 t) {
@@ -206,7 +193,7 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 	Word32 hash[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 	digest160 digest = {0};
 
-	n64 i, t, j;
+	n64 i, t;
 
 	core_log(CORE_DEBUG, "Generating SHA1 hash with %lu blocks\n", blocks.count);
 
@@ -222,6 +209,9 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 		for(t = 0; t <= 15; ++t) {
 			W[t] = block.words[t];
 		}
+
+		assert(W[15] == 40);
+
 
 		for(t = 16; t <= 79; ++t) {
 			W[t] = SHS_Word32_ROTL(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
@@ -243,11 +233,8 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 
 		/* 3. Compute... */
 		for(t = 0; t <= 79; ++t) {
-			T = SHS_Word32_ROTL(var.a, 5);
-			T = SHS_Word32_Add(T, SHS_SHA1_f(t, var.b, var.c, var.d));
-			T = SHS_Word32_Add(T, var.e);
-			T = SHS_Word32_Add(T, SHS_SHA1_K(t));
-			T = SHS_Word32_Add(T, W[t]);
+			T = SHS_Word32_ROTL(var.a, 5) + SHS_SHA1_f(t, var.b, var.c, var.d)
+			  + var.e + W[t] + SHS_SHA1_K(t);
 			var.e = var.d;
 			var.d = var.c;
 			var.c = SHS_Word32_ROTL(var.b, 30);
@@ -259,11 +246,11 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 		/* 		i, var.a, var.b, var.c, var.d, var.e); */
 
 		/* 4. Compute the intermediate hash value */
-		hash[0] = SHS_Word32_Add(var.a, hash[0]);
-		hash[1] = SHS_Word32_Add(var.b, hash[1]);
-		hash[2] = SHS_Word32_Add(var.c, hash[2]);
-		hash[3] = SHS_Word32_Add(var.d, hash[3]);
-		hash[4] = SHS_Word32_Add(var.e, hash[4]);
+		hash[0] += var.a;
+		hash[1] += var.b;
+		hash[2] += var.c;
+		hash[3] += var.d;
+		hash[4] += var.e;
 
 		/* core_log(CORE_DEBUG, "[%02lu] Intermediate... a: %#010x, b: %#010x, c: %#010x, d: %#010x, e: %#010x\n\n", */
 		/* 		i, hash[0], hash[1], hash[2], hash[3], hash[4]); */
