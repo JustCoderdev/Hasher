@@ -1,4 +1,5 @@
-#define LOG_MODULE "SHS"
+#define CORE_LOG_MODULE "SHS"
+#define SGR_ENABLE 1
 
 #include <core.h>
 #include <shs.h>

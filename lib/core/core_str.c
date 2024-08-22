@@ -1,4 +1,4 @@
-/* String module for JustCoderdev Core library v3
+/* String module for JustCoderdev Core library v4
  * */
 
 #include <core.h>
@@ -16,10 +16,8 @@ extern int vsnprintf(char* str, size_t size, const char *format, va_list ap);
 /* #define DEBUG_STRING_ENABLE 1 */
 
 void string_new_(String* string, n32 capacity, char* file, int line) {
-	/* if(string->chars != NULL) printf("%d\t" STR_FMT "\n", line, STR(*string)); */
-
 	/* assert(string->chars == NULL); */
-	string->chars = malloc_(capacity * sizeof(char), file, line);
+	string->chars = malloc_(capacity, file, line);
 	if(string->chars == NULL) {
 		printf("ERROR:%s:%d: Couldn't mallocate string, error: %s",
 				file, line, strerror(errno));
@@ -27,11 +25,11 @@ void string_new_(String* string, n32 capacity, char* file, int line) {
 	}
 
 #if DEBUG_STRING_ENABLE
-	printf("DEBUG: Mallocated string at %p with size %lu\n", string->chars, capacity * sizeof(char));
+	printf("DEBUG: Mallocated string at %p with size %lu\n",
+			string->chars, capacity);
 #endif
 
 	string->capacity = capacity;
-
 	string->count = 0;
 }
 
@@ -45,7 +43,7 @@ void string_new_from_(String* string, n32 text_len, char* text, char* file, int 
 	}
 
 #if DEBUG_STRING_ENABLE
-	printf("DEBUG: Mallocated string at %p with size %lu\n", string->chars, text_len * sizeof(char));
+	printf("DEBUG: Mallocated string at %p with size %lu\n", string->chars, text_len);
 #endif
 
 	string->capacity = capacity;
@@ -71,7 +69,9 @@ void string_from_(String* string, n32 text_len, char* text, char* file, int line
 }
 
 void string_nterm_(String* string, char* file, int line) {
-	if(string->count == 0 || string->chars[string->count - 1] != '\0') {
+	if(string->chars == NULL || string->count == 0
+			|| string->chars[string->count - 1] != '\0')
+	{
 #if DEBUG_STRING_ENABLE
 		printf("DEBUG: Null terminating string '"STR_FMT"' at %p...\n", STR(*string), string->chars);
 #endif
@@ -81,8 +81,9 @@ void string_nterm_(String* string, char* file, int line) {
 }
 
 void string_append_(String* string, char chr, char* file, int line) {
+	if(string->chars == NULL) string_new(string, 8);
 	if(string->capacity < string->count + 1) {
-		string->chars = realloc_(string->chars, (string->count + 1) * 2 * sizeof(char), file, line);
+		string->chars = realloc_(string->chars, (string->count + 1) * 2, file, line);
 		if(string->chars == NULL) {
 			printf("ERROR:%s:%d: Couldn't resize string, error: %s",
 					file, line, strerror(errno));
@@ -114,19 +115,35 @@ void string_clear(String* string) {
 }
 
 void string_fmt(String* string, CString format, ...) {
-	va_list ptr;
-	va_start(ptr, format);
+	int size;
 
-	string->count = 1 + vsnprintf(string->chars,
-			string->capacity, format, ptr);
+	va_list args;
+	va_start(args, format);
 
-	va_end(ptr);
+	size = vsnprintf(string->chars, string->capacity, format, args);
+	if(size < 0) {
+		core_log(CORE_ERROR, "Couldn't format string \"%s\": %s",
+				format, strerror(errno));
+		exit(failure);
+	}
+
+	if((n32)size >= string->capacity)
+	{
+#if DEBUG_STRING_ENABLE
+		core_log(CORE_DEBUG, "Truncation of string_fmt with format '%s'\n", format);
+#endif
+
+		string->count = string->capacity - 1;
+	} else {
+		/* vsnprintf always null terminates string */
+		string->count = size + 1;
+	}
+
+	va_end(args);
 }
 
 void string_remove(String* string, n32 count) {
-	string->count -= (count > string->count)
-	? string->count
-		: count;
+	string->count -= pclamp(count, string->count);
 }
 
 bool string_equals(String strA, n32 strB_len, CString strB) {

@@ -7,10 +7,11 @@ OBJ_FILES = $(patsubst %.c,%.o,${SRC_FILES})
 SHS_FILES = shs.c
 CORE_FILES = lib/core/core_bit.c \
 		 lib/core/core_buff.c \
+		 lib/core/core_logger.c \
+		 lib/core/core_memdeb.c \
 		 lib/core/core_net.c \
 		 lib/core/core_str.c \
-		 lib/core/core_memdeb.c \
-		 lib/core/core_logger.c
+		 lib/core/core_stuff.c
 
 CC = gcc
 CCFLAGS = -xc -std=c89 -Wall -Wextra -Werror \

@@ -7,20 +7,6 @@
 #include <assert.h>
 
 
-char* shift(int* argc, char*** argv)
-{
-	char* t;
-
-	(*argc)--;
-	assert(*argc >= 0);
-
-	t = (*argv)[*argc];
-	(*argv)++;
-
-	return t;
-}
-
-
 int main(int argc, char** argv)
 {
 	FILE* ftoh_file;
@@ -50,7 +36,6 @@ int main(int argc, char** argv)
 
 		SHS_block512_List_free(&blocks);
 	}
-
 
 	return success;
 }
