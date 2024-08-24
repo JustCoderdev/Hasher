@@ -5,7 +5,7 @@
 #ifndef CORE_H_
 #define CORE_H_
 
-#define CORE_STR_VER 8
+#define CORE_VER 8
 
 /* #define SGR_ENABLE 1 */
 

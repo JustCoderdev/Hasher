@@ -7,7 +7,7 @@
 #ifndef SHS_H_
 #define SHS_H_
 
-#define CORE_STR_VER 1
+#define SHS_VER 1
 
 #include <core.h>
 
@@ -108,7 +108,8 @@ extern SHS_digest256 SHS_SHA512_256_generate_digest(SHS_Block1024_List blocks);
 /* Operate on Digests
  * ----------------------------------------------------------- */
 
-#define SHS_D160_FMT "%#010x%08x%08x%08x%08x"
+/* #define SHS_D160_FMT "%#010x%08x%08x%08x%08x" */
+#define SHS_D160_FMT "%08x%08x%08x%08x%08x"
 #define SHS_D160(D) \
 	(D).byte[ 0] << 24 | (D).byte[ 1] << 16 | (D).byte[ 2] << 8 | (D).byte[ 3], \
 	(D).byte[ 4] << 24 | (D).byte[ 5] << 16 | (D).byte[ 6] << 8 | (D).byte[ 7], \

@@ -117,7 +117,7 @@ void test_digest_operations()
 
 	SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, words);
 
-	assert(snprintf(buff, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
+	assert(snprintf(buff, BUFF_LEN, "0x" SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
 	core_test(!strncmp(exp_text, buff, BUFF_LEN), exp_text, buff,
 		"Word32 array to digest (SHS_digest_from_Word32)"
 	);
@@ -149,9 +149,9 @@ void test_sha1()
 
 		digest = SHS_SHA1_generate_digest(blocks);
 
-		assert(snprintf(buffDIG, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
+		assert(snprintf(buffDIG, BUFF_LEN, "0x" SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
 		SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, exp_result);
-		assert(snprintf(buffEXP, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
+		assert(snprintf(buffEXP, BUFF_LEN, "0x" SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
 
 		core_test(!strncmp(buffDIG, buffEXP, BUFF_LEN), buffEXP, buffDIG,
 			"SHA1 on file '%s'", filename

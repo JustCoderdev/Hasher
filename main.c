@@ -27,14 +27,16 @@ int main(int argc, char** argv)
 	}
 
 	{
-		digest160 digest;
-		Block512_List blocks = SHS_block512_create_list_from_file(ftoh_file);
+		SHS_digest160 digest;
+		SHS_Block512_List blocks;
+
+		blocks = SHS_block512_create_list_from_file(ftoh_file);
 		fclose(ftoh_file);
 
 		digest = SHS_SHA1_generate_digest(blocks);
-		printf(D160_FMT, D160(digest));
-
 		SHS_block512_List_free(&blocks);
+
+		printf(SHS_D160_FMT "\n", SHS_D160(digest));
 	}
 
 	return success;

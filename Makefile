@@ -29,7 +29,7 @@ LDFLAGS = -L./
 DFLAGS =
 FLAGS = $(CCFLAGS) $(IFLAGS) $(LDFLAGS) $(RAYFLAGS) $(DFLAGS)
 
-local: build run
+local: build
 #build_so:
 #	@echo "Compiling... (auto)"
 #	@mkdir -p bin
@@ -40,6 +40,11 @@ build:
 	@echo "Compiling... "
 	@mkdir -p bin
 	$(CC) $(FLAGS) $(SRC_FILES) $(CORE_FILES) $(SHS_FILES) -o bin/${PROGRAM_NAME}
+
+# run:
+# 	@echo -e "Running...\n"
+# 	@chmod +x bin/$(PROGRAM_NAME)
+# 	@cd bin && ./$(PROGRAM_NAME)
 
 local_test: build_test run_test
 build_test:
