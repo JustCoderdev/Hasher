@@ -14,7 +14,7 @@ int snprintf(char* str, size_t size, const char *format, ...);
 #define TEST_FILES_COUNT 3
 char* const test_files[TEST_FILES_COUNT] = {
 	"test/test_abcde", "test/test_lorem", "test/test_poem" };
-Word32 test_exp_results[TEST_FILES_COUNT][5] = {
+SHS_Word32 test_exp_results[TEST_FILES_COUNT][5] = {
 	{ 0xec113123, 0x86ad5616, 0x74f724b8, 0xcca7cf17, 0x96e26d1d },
 	{ 0x0d7d0c40, 0x6f4b1152, 0x70cac19c, 0x2c67522a, 0x4a9d9478 },
 	{ 0xd0b6dd32, 0x03ca6d7c, 0x0e442171, 0x3c34fe31, 0x8aa67ffa }
@@ -22,44 +22,25 @@ Word32 test_exp_results[TEST_FILES_COUNT][5] = {
 
 /* ------------------ */
 
-
-void test(bool pass, CString expected, CString got, CString format, ...) {
-	va_list args;
-	va_start(args, format);
-
-	if(pass) {
-		printf("[*] \033[32mPASS\033[0m: ");
-		vfprintf(stdout, format, args);
-		printf("\n");
-	} else {
-		printf("[x] \033[31mFAIL\033[0m: ");
-		vfprintf(stdout, format, args);
-		printf("\n  expected: %s\n       got: %s\n",
-		expected, got);
-	}
-
-	va_end(args);
-}
-
 void test_word_operations()
 {
-	printf("\n Word32 Operations:\n");
+	printf("\n SHS_Word32 Operations:\n");
 
-	test(SHS_Word32_ROTL(10, 5) == SHS_Word32_ROTR(10, 32 - 5),
+	core_test(SHS_Word32_ROTL(10, 5) == SHS_Word32_ROTR(10, 32 - 5),
 	     "true", "false", "W32 Left/Right Rotation (SHS_Word32_ROTL, SHS_Word32_ROTR)"
 	);
 
-	/* test(SHS_Word64_ROTL(10, 5) == SHS_Word64_ROTR(10, 32 - 5), */
+	/* core_test(SHS_Word64_ROTL(10, 5) == SHS_Word64_ROTR(10, 32 - 5), */
 	/*      "true", "false", "W64 Left/Right Rotation (SHS_Word64_ROTL, SHS_Word64_ROTR)" */
 	/* ); */
 }
 
-void print_block512_list(Block512_List blocks)
+void print_block512_list(SHS_Block512_List blocks)
 {
 	n64 i, j, k;
 	for(i = 0; i < blocks.count; ++i)
 	{
-		Block512 block = blocks.items[i];
+		SHS_Block512 block = blocks.items[i];
 
 		printf("\n%02lu|", i + 1);
 		for(j = 0; j < 8; ++j)
@@ -90,7 +71,7 @@ void print_block512_list(Block512_List blocks)
 
 void test_block_creation()
 {
-	Block512_List blocks = {0};
+	SHS_Block512_List blocks = {0};
 	n64 i;
 
 	printf("\n Block creation:\n");
@@ -109,7 +90,7 @@ void test_block_creation()
 		fclose(file);
 
 		/* print_block512_list(blocks); */
-		test(true, "", "",
+		core_test(true, "", "",
 			"Creating block512 list for file '%s'", filename
 		);
 
@@ -127,23 +108,23 @@ void test_digest_operations()
 	#define BUFF_LEN 43
 	char buff[BUFF_LEN] = {0};
 
-	Word32 words[5] = { 0xda881919, 0x84932a60, 0xa59109ea, 0x2c276a19, 0x1380fb41 };
+	SHS_Word32 words[5] = { 0xda881919, 0x84932a60, 0xa59109ea, 0x2c276a19, 0x1380fb41 };
 	char* exp_text = "0xda88191984932a60a59109ea2c276a191380fb41";
 
-	digest160 digest = {0};
+	SHS_digest160 digest = {0};
 
 	printf("\n Digest operations:\n");
 
 	SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, words);
 
-	assert(snprintf(buff, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
-	test(!strncmp(exp_text, buff, BUFF_LEN), exp_text, buff,
+	assert(snprintf(buff, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
+	core_test(!strncmp(exp_text, buff, BUFF_LEN), exp_text, buff,
 		"Word32 array to digest (SHS_digest_from_Word32)"
 	);
 
 
 	/* TODO: add digest compare tests */
-	/* test(SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte, "SHA1 on file ''"), */
+	/* core_test(SHS_digest_compare(SHS_DS160, digest.byte, hardig.byte, "SHA1 on file ''"), */
 }
 
 void test_sha1()
@@ -152,15 +133,15 @@ void test_sha1()
 	char buffEXP[BUFF_LEN] = {0},
 		 buffDIG[BUFF_LEN] = {0};
 
-	Block512_List blocks = {0};
-	digest160 digest;
+	SHS_Block512_List blocks = {0};
+	SHS_digest160 digest;
 	n64 i;
 
 	printf("\n SHA-1:\n");
 
 	for(i = 0; i < TEST_FILES_COUNT; ++i) {
 		char* filename = test_files[i];
-		Word32* exp_result = test_exp_results[i];
+		SHS_Word32* exp_result = test_exp_results[i];
 
 		FILE* file = fopen(filename, "r");
 		blocks = SHS_block512_create_list_from_file(file);
@@ -168,11 +149,11 @@ void test_sha1()
 
 		digest = SHS_SHA1_generate_digest(blocks);
 
-		assert(snprintf(buffDIG, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
+		assert(snprintf(buffDIG, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
 		SHS_digest_from_Word32(SHS_DS160, digest.byte, 5, exp_result);
-		assert(snprintf(buffEXP, BUFF_LEN, D160_FMT, D160(digest)) < BUFF_LEN);
+		assert(snprintf(buffEXP, BUFF_LEN, SHS_D160_FMT, SHS_D160(digest)) < BUFF_LEN);
 
-		test(!strncmp(buffDIG, buffEXP, BUFF_LEN), buffEXP, buffDIG,
+		core_test(!strncmp(buffDIG, buffEXP, BUFF_LEN), buffEXP, buffDIG,
 			"SHA1 on file '%s'", filename
 		);
 	}

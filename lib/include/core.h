@@ -1,8 +1,11 @@
-/* JustCoderdev's Core library v8
- * */
+/*
+ * JustCoderdev's Core library v8
+ */
 
 #ifndef CORE_H_
 #define CORE_H_
+
+#define CORE_STR_VER 8
 
 /* #define SGR_ENABLE 1 */
 
@@ -222,6 +225,8 @@ typedef enum {
 
 extern void core_log(LogLevel level, CString module,
 		CString file, int line, CString format, ...);
+extern void core_test(bool pass, CString expected,
+		CString got, CString format, ...);
 
 
 /* Memdeb v1

@@ -4,7 +4,7 @@ PROGRAM_NAME = Hasher
 
 SRC_FILES = main.c
 OBJ_FILES = $(patsubst %.c,%.o,${SRC_FILES})
-SHS_FILES = shs.c
+SHS_FILES = lib/shs/shs.c
 CORE_FILES = lib/core/core_bit.c \
 		 lib/core/core_buff.c \
 		 lib/core/core_logger.c \

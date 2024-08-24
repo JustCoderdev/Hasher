@@ -14,7 +14,7 @@
 /* Create and free Blocks
  * ----------------------------------------------------------- */
 
-Block512_List SHS_block512_create_list_from_file(FILE* file)
+SHS_Block512_List SHS_block512_create_list_from_file(FILE* file)
 {
 #define BLOCK_SIZE 64
 	i64 file_size = -1;
@@ -40,7 +40,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 	/* Read blocks from file */
 		n64 i, file_blocks = file_size / BLOCK_SIZE;
 		n8 extra_bytes = file_size % BLOCK_SIZE;
-		Block512_List blocks = {0};
+		SHS_Block512_List blocks = {0};
 
 #define LAST_BLOCK_MAX_SIZE 55 /* 55B = (512 - 64 - 8)/8 */
 		bool need_extra_block = extra_bytes > LAST_BLOCK_MAX_SIZE;
@@ -68,7 +68,7 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 
 		for(i = 0; i < blocks.count; ++i)
 		{
-			Block512* block = &blocks.items[i];
+			SHS_Block512* block = &blocks.items[i];
 			n64 j;
 
 			ssize_t read_bytes, request_bytes = BLOCK_SIZE;
@@ -101,8 +101,8 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 			/* Fix endianess */
 			for(j = 0; j < 16; ++j)
 			{
-				Word32* word = &block->words[j];
-				Word32 t = *word;
+				SHS_Word32* word = &block->words[j];
+				SHS_Word32 t = *word;
 				*word
 					= ((t & 0x000000FF) << 24)
 					| ((t & 0x0000FF00) << 8)
@@ -112,21 +112,21 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 		}
 
 		{
-			Block512* last_block = &blocks.items[blocks.count - 1];
+			SHS_Block512* last_block = &blocks.items[blocks.count - 1];
 			assert(!last_block->as.wF && !last_block->as.wE);
 
 			if(extra_bytes > LAST_BLOCK_MAX_SIZE) {
-				Block512* last_file_block = &blocks.items[blocks.count - 2];
-				assert(extra_bytes < sizeof(Word32) * 16);
+				SHS_Block512* last_file_block = &blocks.items[blocks.count - 2];
+				assert(extra_bytes < sizeof(SHS_Word32) * 16);
 
 				/* write B10000000 to next free byte in word */
-				last_file_block->words[extra_bytes / sizeof(Word32)]
-					|= 0x80 << ((sizeof(Word32) - extra_bytes - 1) * 8);
+				last_file_block->words[extra_bytes / sizeof(SHS_Word32)]
+					|= 0x80 << ((sizeof(SHS_Word32) - extra_bytes - 1) * 8);
 			}
 			else
 			{
-				last_block->words[extra_bytes / sizeof(Word32)]
-					|= 0x80 << ((sizeof(Word32) - extra_bytes - 1) * 8);
+				last_block->words[extra_bytes / sizeof(SHS_Word32)]
+					|= 0x80 << ((sizeof(SHS_Word32) - extra_bytes - 1) * 8);
 			}
 
 			/* write size (64b) to last words (2*32b) */
@@ -142,12 +142,12 @@ Block512_List SHS_block512_create_list_from_file(FILE* file)
 
 /* extern Block1024_List SHS_block1024_create_list_from_file(FILE* file); */
 
-void SHS_block512_List_free(Block512_List* blocks) {
+void SHS_block512_List_free(SHS_Block512_List* blocks) {
 	if(blocks->items != NULL) dfree(blocks->items);
 	blocks->count = 0;
 }
 
-void SHS_block1024_List_free(Block1024_List* blocks) {
+void SHS_block1024_List_free(SHS_Block1024_List* blocks) {
 	if(blocks->items != NULL) dfree(blocks->items);
 	blocks->count = 0;
 }
@@ -156,12 +156,12 @@ void SHS_block1024_List_free(Block1024_List* blocks) {
 /* Operate on Word (ww is Word size, 32 or 64)
  * ----------------------------------------------------------- */
 
-Word32 SHS_Word32_ROTL(Word32 word, n8 n) {
+SHS_Word32 SHS_Word32_ROTL(SHS_Word32 word, n8 n) {
 	assert(n < 32); /* 0 <= n < w */
 	return (word << n) | (word >> (32 - n));
 }
 
-Word32 SHS_Word32_ROTR(Word32 word, n8 n) {
+SHS_Word32 SHS_Word32_ROTR(SHS_Word32 word, n8 n) {
 	assert(n < 32); /* 0 <= n < w */
 	return (word >> n) | (word << (32 - n));
 }
@@ -174,7 +174,7 @@ Word32 SHS_Word32_ROTR(Word32 word, n8 n) {
 /* Generate digest
  * ----------------------------------------------------------- */
 
-static Word32 SHS_SHA1_f(n8 t, Word32 b, Word32 c, Word32 d) {
+static SHS_Word32 SHS_SHA1_f(n8 t, SHS_Word32 b, SHS_Word32 c, SHS_Word32 d) {
 	assert(t < 80);
 	if(t <= 19) return (b & c) | ((~b) & d);
 	if(t <= 39) return b ^ c ^ d;
@@ -182,7 +182,7 @@ static Word32 SHS_SHA1_f(n8 t, Word32 b, Word32 c, Word32 d) {
 	return b ^ c ^ d;
 }
 
-static Word32 SHS_SHA1_K(n8 t) {
+static SHS_Word32 SHS_SHA1_K(n8 t) {
 	assert(t < 80);
 	if(t <= 19) return 0x5a827999;
 	if(t <= 39) return 0x6ed9eba1;
@@ -190,10 +190,10 @@ static Word32 SHS_SHA1_K(n8 t) {
 	return 0xca62c1d6;
 }
 
-digest160 SHS_SHA1_generate_digest(Block512_List blocks)
+SHS_digest160 SHS_SHA1_generate_digest(SHS_Block512_List blocks)
 {
-	Word32 hash[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
-	digest160 digest = {0};
+	SHS_Word32 hash[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
+	SHS_digest160 digest = {0};
 
 	n64 i, t;
 
@@ -201,10 +201,10 @@ digest160 SHS_SHA1_generate_digest(Block512_List blocks)
 
 	for(i = 0; i < blocks.count; ++i)
 	{
-		Block512 block = blocks.items[i]; /* M */
+		SHS_Block512 block = blocks.items[i]; /* M */
 
-		struct { Word32 a, b, c, d, e; } var = {0};
-		Word32 T, W[80] = {0};
+		struct { SHS_Word32 a, b, c, d, e; } var = {0};
+		SHS_Word32 T, W[80] = {0};
 
 
 		/* 1. Prepare the message schedule */
@@ -295,19 +295,17 @@ bool SHS_digest_compare(SHS_Digest_Size size, const n8* dA, const n8* dB)
 
 
 void SHS_digest_from_Word32(SHS_Digest_Size dsize, n8* digest,
-		n8 hcount, const Word32* hash)
+		n8 hcount, const SHS_Word32* hash)
 {
 	n8 i;
 
-#define WORD_SIZE 4
-
-	assert(hcount * WORD_SIZE == dsize);
+	assert(hcount * SHS_WORD32_SIZE == dsize);
 	for(i = 0; i < hcount; ++i)
 	{
-		digest[i * WORD_SIZE + 0] = hash[i] >> 24;
-		digest[i * WORD_SIZE + 1] = hash[i] >> 16;
-		digest[i * WORD_SIZE + 2] = hash[i] >>  8;
-		digest[i * WORD_SIZE + 3] = hash[i] >>  0;
+		digest[i * SHS_WORD32_SIZE + 0] = hash[i] >> 24;
+		digest[i * SHS_WORD32_SIZE + 1] = hash[i] >> 16;
+		digest[i * SHS_WORD32_SIZE + 2] = hash[i] >>  8;
+		digest[i * SHS_WORD32_SIZE + 3] = hash[i] >>  0;
 	}
 }
 

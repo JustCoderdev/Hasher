@@ -60,3 +60,24 @@ void core_log(LogLevel level, CString module,
 	vfprintf(CORE_LOG_STREAM, format, args);
 	va_end(args);
 }
+
+
+void core_test(bool pass, CString expected,
+		CString got, CString format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	if(pass) {
+		printf("[*] \033[32mPASS\033[0m: ");
+		vfprintf(stdout, format, args);
+		printf("\n");
+	} else {
+		printf("[x] \033[31mFAIL\033[0m: ");
+		vfprintf(stdout, format, args);
+		printf("\n  expected: %s\n       got: %s\n",
+			expected, got);
+	}
+
+	va_end(args);
+}
