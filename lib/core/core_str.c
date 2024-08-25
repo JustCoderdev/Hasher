@@ -34,7 +34,7 @@ void string_new_(String* string, n32 capacity, char* file, int line) {
 }
 
 void string_new_from_(String* string, n32 text_len, char* text, char* file, int line) {
-	n64 capacity = text_len; /* +1 to nterm */
+	n32 capacity = text_len; /* +1 to nterm */
 	string->chars = malloc_(capacity, file, line);
 	if(string->chars == NULL) {
 		printf("ERROR:%s:%d: Couldn't mallocate string, error: %s",
@@ -54,7 +54,7 @@ void string_new_from_(String* string, n32 text_len, char* text, char* file, int 
 
 void string_from_(String* string, n32 text_len, char* text, char* file, int line) {
 	if(string->capacity < text_len) {
-		n64 capacity = text_len; /* +1 to nterm */
+		n32 capacity = text_len; /* +1 to nterm */
 		string->chars = realloc_(string->chars, capacity, file, line);
 		if(string->chars == NULL) {
 			printf("ERROR:%s:%d: Couldn't reallocate string, error: %s",
@@ -136,7 +136,7 @@ void string_fmt(String* string, CString format, ...) {
 		string->count = string->capacity - 1;
 	} else {
 		/* vsnprintf always null terminates string */
-		string->count = size + 1;
+		string->count = (n32)size + 1;
 	}
 
 	va_end(args);
@@ -159,5 +159,6 @@ bool string_equals(String strA, n32 strB_len, CString strB) {
 }
 
 bool string_equallit(String strA, CString strB) {
-	return string_equals(strA, strlen(strB), strB);
+	assert(strlen(strB) < (n32)-1);
+	return string_equals(strA, (n32)strlen(strB), strB);
 }

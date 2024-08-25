@@ -35,11 +35,11 @@ SHS_Block512_List SHS_block512_create_list_from_file(FILE* file)
 
 	fseek(file, 0L, SEEK_SET);
 
-
+	assert(BLOCK_SIZE > 0 && BLOCK_SIZE < 255);
 	{
 	/* Read blocks from file */
-		n64 i, file_blocks = file_size / BLOCK_SIZE;
-		n8 extra_bytes = file_size % BLOCK_SIZE;
+		n64 i, file_blocks = (n64)(file_size / BLOCK_SIZE);
+		n8 extra_bytes = (n8)(file_size % BLOCK_SIZE);
 		SHS_Block512_List blocks = {0};
 
 #define LAST_BLOCK_MAX_SIZE 55 /* 55B = (512 - 64 - 8)/8 */
@@ -71,7 +71,7 @@ SHS_Block512_List SHS_block512_create_list_from_file(FILE* file)
 			SHS_Block512* block = &blocks.items[i];
 			n64 j;
 
-			ssize_t read_bytes, request_bytes = BLOCK_SIZE;
+			size_t read_bytes, request_bytes = BLOCK_SIZE;
 
 			if(blocks.count > 1 && i == blocks.count - 2 && need_extra_block)
 				request_bytes = extra_bytes;
@@ -130,8 +130,8 @@ SHS_Block512_List SHS_block512_create_list_from_file(FILE* file)
 			}
 
 			/* write size (64b) to last words (2*32b) */
-			last_block->as.wE = file_size * 8 >> 32;
-			last_block->as.wF = file_size * 8;
+			last_block->as.wE = (n32)(file_size * 8 >> 32);
+			last_block->as.wF = (n32)(file_size * 8);
 		}
 
 		return blocks;
@@ -195,7 +195,8 @@ SHS_digest160 SHS_SHA1_generate_digest(SHS_Block512_List blocks)
 	SHS_Word32 hash[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 	SHS_digest160 digest = {0};
 
-	n64 i, t;
+	n64 i;
+	n8 t;
 
 	core_log(CORE_DEBUG, "Generating SHA1 hash with %lu blocks\n", blocks.count);
 
@@ -302,10 +303,10 @@ void SHS_digest_from_Word32(SHS_Digest_Size dsize, n8* digest,
 	assert(hcount * SHS_WORD32_SIZE == dsize);
 	for(i = 0; i < hcount; ++i)
 	{
-		digest[i * SHS_WORD32_SIZE + 0] = hash[i] >> 24;
-		digest[i * SHS_WORD32_SIZE + 1] = hash[i] >> 16;
-		digest[i * SHS_WORD32_SIZE + 2] = hash[i] >>  8;
-		digest[i * SHS_WORD32_SIZE + 3] = hash[i] >>  0;
+		digest[i * SHS_WORD32_SIZE + 0] = (n8)(hash[i] >> 24);
+		digest[i * SHS_WORD32_SIZE + 1] = (n8)(hash[i] >> 16);
+		digest[i * SHS_WORD32_SIZE + 2] = (n8)(hash[i] >>  8);
+		digest[i * SHS_WORD32_SIZE + 3] = (n8)(hash[i] >>  0);
 	}
 }
 

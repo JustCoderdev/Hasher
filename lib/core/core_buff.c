@@ -9,9 +9,10 @@
 
 /* Return the index of the chr or -1 */
 i64 buffer_find_chr(char chr, char *buffer, n64 len) {
-	n64 i;
+	i64 i;
 
-	for(i = 0; i < len; ++i)
+	assert(len < (n64)2e63);
+	for(i = 0; i < (i64)len; ++i)
 	{
 		if(buffer[i] == chr) return i;
 	}

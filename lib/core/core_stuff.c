@@ -8,11 +8,10 @@
 char* shift(int* argc, char*** argv)
 {
 	char* t;
+	assert(*argc > 0);
 
 	(*argc)--;
-	assert(*argc >= 0);
-
-	t = (*argv)[*argc];
+	t = (*argv)[0];
 	(*argv)++;
 
 	return t;

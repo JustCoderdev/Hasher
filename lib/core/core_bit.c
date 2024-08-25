@@ -21,9 +21,9 @@ void printb(n8 byte)
 
 void printw(n32 word)
 {
-	printb(word >> 24);
-	printb(word >> 16);
-	printb(word >> 8);
-	printb(word);
+	printb((n8)(word >> 24));
+	printb((n8)(word >> 16));
+	printb((n8)(word >> 8));
+	printb((n8)(word));
 }
 

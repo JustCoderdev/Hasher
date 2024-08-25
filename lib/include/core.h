@@ -52,6 +52,10 @@ typedef int Errno;
  * ----------------------------------------------------------- */
 #define CORE_STR_VER 4
 
+/* #if CORE_STR_SHA != 0xdced4c9c69dbe5a3 */
+/* #error Core module STR is out of date, bump the version and update the shas */
+/* #endif */
+
 typedef const char* CString;
 typedef struct String {
 	n32 count, capacity;
@@ -175,6 +179,10 @@ extern bool string_equallit(String strA, CString strB);
  * ----------------------------------------------------------- */
 #define CORE_BIT_VER 1
 
+/* #if CORE_BIT_SHA != 0xfac875ad08307edd */
+/* #error Core module BIT is out of date, bump the version and update the shas */
+/* #endif */
+
 extern void printb(n8 byte);
 extern void printw(n32 word);
 
@@ -184,6 +192,10 @@ extern void savebuff(FILE *file, char *buffer, n64 buff_len);
 /* Buffer v1
  * ----------------------------------------------------------- */
 #define CORE_BUF_VER 1
+
+/* #if CORE_BUF_SHA != 0x75a0b7a96790fa97 */
+/* #error Core module BUF is out of date, bump the version and update the shas */
+/* #endif */
 
 /* Return the index of the chr or -1 */
 extern i64 buffer_find_chr(char chr, char *buffer, n64 len);
@@ -205,6 +217,10 @@ extern n64 buffer_copy_until_str(char *delimiter, n64 del_len,
 /* Logger v3
  * ----------------------------------------------------------- */
 #define CORE_LOG_VER 3
+
+/* #if CORE_LOG_SHA != 0xc4238c8855ffa914 */
+/* #error Core module LOG is out of date, bump the version and update the shas */
+/* #endif */
 
 #ifndef CORE_LOG_MODULE
 #define CORE_LOG_MODULE NULL
@@ -233,6 +249,10 @@ extern void core_test(bool pass, CString expected,
  * ----------------------------------------------------------- */
 #define CORE_MEM_VER 1
 
+/* #if CORE_MEM_SHA != 0xfdd83e2b940504d1 */
+/* #error Core module MEM is out of date, bump the version and update the shas */
+/* #endif */
+
 #define dmalloc(SIZE)        malloc_(SIZE, __FILE__, __LINE__)
 #define dfree(PTR)           free_(PTR, __FILE__, __LINE__)
 #define dcalloc(NMEMB, SIZE) calloc_(NMEMB, SIZE, __FILE__, __LINE__)
@@ -248,6 +268,10 @@ extern void *realloc_(void* ptr, size_t size, char* file, int line);
  * ----------------------------------------------------------- */
 #define CORE_NET_VER 1
 
+/* #if CORE_NET_SHA != 0x2c0848b091d04575 */
+/* #error Core module NET is out of date, bump the version and update the shas */
+/* #endif */
+
 typedef union ip4_addr {
 	struct in_addr addr;
 	struct { n8 D, C, B, A; } part;
@@ -261,6 +285,10 @@ extern error hostname_resolve(const char *hostname, struct in_addr *address);
 /* Stuff v1
  * ----------------------------------------------------------- */
 #define CORE_STF_VER 1
+
+/* #if CORE_STF_SHA != 0x7170ff389f686ff1 */
+/* #error Core module STF is out of date, bump the version and update the shas */
+/* #endif */
 
 extern char* shift(int* argc, char*** argv);
 

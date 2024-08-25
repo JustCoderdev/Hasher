@@ -14,8 +14,11 @@ CORE_FILES = lib/core/core_bit.c \
 		 lib/core/core_stuff.c
 
 CC = gcc
-CCFLAGS = -xc -std=c89 -Wall -Wextra -Werror \
-		 -g -pedantic-errors -pedantic
+CCFLAGS = -xc -std=c89 -ansi -pedantic-errors -pedantic \
+		 -Wall -Wextra -Werror -Wshadow -Wpointer-arith \
+		 -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes \
+		 -Wconversion -g
+
 #-Wno-unused
 IFLAGS = -I./ -I./lib/include
 LDFLAGS = -L./
@@ -23,10 +26,19 @@ LDFLAGS = -L./
 #		-Wl,-rpath=./lib/raylib/ -L./lib/raylib -lraylib
 ##-lXrandr -lXinerama -lXi -lXcursor
 
+CORE_FLAGS = \
+	-DCORE_STR_SHA="0x$(shell ./bin/Hasher -s lib/core/core_str.c)" \
+	-DCORE_BIT_SHA="0x$(shell ./bin/Hasher -s lib/core/core_bit.c)" \
+	-DCORE_BUF_SHA="0x$(shell ./bin/Hasher -s lib/core/core_buff.c)" \
+	-DCORE_LOG_SHA="0x$(shell ./bin/Hasher -s lib/core/core_logger.c)" \
+	-DCORE_MEM_SHA="0x$(shell ./bin/Hasher -s lib/core/core_memdeb.c)" \
+	-DCORE_NET_SHA="0x$(shell ./bin/Hasher -s lib/core/core_net.c)" \
+	-DCORE_STF_SHA="0x$(shell ./bin/Hasher -s lib/core/core_stuff.c)"
+
 #-DDEBUG_MEMDEB_ENABLE=1
 #-DDEBUG_STRING_ENABLE=1
-# -DDEBUG_ENABLE=1
-DFLAGS =
+#-DDEBUG_ENABLE=1
+DFLAGS = $(CORE_FLAGS)
 FLAGS = $(CCFLAGS) $(IFLAGS) $(LDFLAGS) $(RAYFLAGS) $(DFLAGS)
 
 local: build
