@@ -1,17 +1,17 @@
-# JustCoderdev Makefile for C projects v5
+# JustCoderdev Makefile for C projects v6
 
 PROGRAM_NAME = Hasher
 
-SRC_FILES = main.c
-OBJ_FILES = $(patsubst %.c,%.o,${SRC_FILES})
-SHS_FILES = lib/shs/shs.c
-CORE_FILES = lib/core/core_bit.c \
-		 lib/core/core_buff.c \
-		 lib/core/core_logger.c \
-		 lib/core/core_memdeb.c \
-		 lib/core/core_net.c \
-		 lib/core/core_str.c \
-		 lib/core/core_stuff.c
+SRC_FILES  = main.c
+OBJ_FILES  = $(patsubst %.c,%.o,${SRC_FILES})
+SHS_FILES  = CoreMountain/shs/shs.c
+CORE_FILES = CoreMountain/core/core_bit.c \
+             CoreMountain/core/core_buff.c \
+             CoreMountain/core/core_logger.c \
+             CoreMountain/core/core_memdeb.c \
+             CoreMountain/core/core_net.c \
+             CoreMountain/core/core_str.c \
+             CoreMountain/core/core_stuff.c
 
 CC = gcc
 CCFLAGS = -xc -std=c89 -ansi -pedantic-errors -pedantic \
@@ -19,8 +19,7 @@ CCFLAGS = -xc -std=c89 -ansi -pedantic-errors -pedantic \
 		 -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes \
 		 -Wconversion -g
 
-#-Wno-unused
-IFLAGS = -I./ -I./lib/include
+IFLAGS = -I./ -I./lib/include -I./CoreMountain/include
 LDFLAGS = -L./
 #RAYFLAGS = -lGL -lm -lpthread -ldl -lX11 \
 #		-Wl,-rpath=./lib/raylib/ -L./lib/raylib -lraylib
@@ -57,18 +56,6 @@ build:
 # 	@echo -e "Running...\n"
 # 	@chmod +x bin/$(PROGRAM_NAME)
 # 	@cd bin && ./$(PROGRAM_NAME)
-
-local_test: build_test run_test
-build_test:
-	@echo "Compiling... (test)"
-	@mkdir -p bin
-	@cp -r test bin/test
-	$(CC) $(FLAGS) test.c $(SHS_FILES) $(CORE_FILES) -o bin/${PROGRAM_NAME}_test
-
-run_test:
-	@echo -e "Running... (test)\n"
-	@chmod +x bin/$(PROGRAM_NAME)_test
-	@cd bin && ./$(PROGRAM_NAME)_test
 
 
 .PHONY: clean
